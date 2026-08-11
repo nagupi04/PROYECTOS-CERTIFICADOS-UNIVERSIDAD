@@ -7,14 +7,20 @@
 
 # ---------- IMPORTACIONES ----------
 # Flask: crea el servidor web. openpyxl: lee los archivos Excel.
+# pathlib: rutas que funcionan desde cualquier carpeta (produccion).
 from flask import Flask, render_template, request, abort
 from openpyxl import load_workbook
+from pathlib import Path
 
 # ---------- VARIABLES GLOBALES (ladrillos: datos fijos) ----------
+# BASE_DIR: carpeta donde vive este archivo, sin importar desde donde
+# se ejecute la app (local o servidor de produccion).
+BASE_DIR = Path(__file__).resolve().parent
+
 # Rutas de los archivos Excel de entrada (la "bodega").
 # IMPORTANTE: estos archivos NO se modifican, solo se leen.
-ARCHIVO_MAESTRO = "INSUMOS/Maestro_Estudiantes.xlsx"
-ARCHIVO_EVALUACIONES = "INSUMOS/Registro_Evaluaciones.xlsx"
+ARCHIVO_MAESTRO = BASE_DIR / "INSUMOS" / "Maestro_Estudiantes.xlsx"
+ARCHIVO_EVALUACIONES = BASE_DIR / "INSUMOS" / "Registro_Evaluaciones.xlsx"
 
 # Modulos maximos esperados por programa (para detectar incompletos)
 CANTIDAD_MODULOS_ESPERADOS = 4
