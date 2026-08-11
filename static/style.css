@@ -1,0 +1,385 @@
+/* ============================================================
+   ACADEMIA HORIZONTE - Estilos (azul marino y dorado)
+   ============================================================ */
+
+/* Variables de color del tema */
+:root {
+    --azul-marino: #0b2b5b;
+    --azul-marino-claro: #14407c;
+    --dorado: #c9a227;
+    --dorado-claro: #f0cc5b;
+    --texto: #1c2b39;
+    --fondo: #f5f7fb;
+    --blanco: #ffffff;
+}
+
+/* ---------- Tipos (base de toda la pagina) ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(180deg, var(--dorado-claro) 0%, var(--fondo) 240px);
+    color: var(--texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Encabezado (azul marino + dorado) ---------- */
+header, .certificado-encabezado {
+    background: linear-gradient(120deg, var(--azul-marino) 0%, var(--azul-marino-claro) 100%);
+    text-align: center;
+    padding: 30px 16px 14px;
+    box-shadow: 0 3px 10px rgba(11, 42, 91, 0.35);
+}
+
+h1 {
+    color: var(--dorado-claro);
+    font-size: 2.3rem;
+    letter-spacing: 3px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitulo {
+    color: #e8eef7;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+
+/* ---------- Contenido principal ---------- */
+main {
+    flex: 1;
+    width: min(1000px, 95%);
+    margin: 0 auto;
+    padding: 14px 0 30px;
+}
+
+/* CONTADORES: tarjetas de resumen */
+.contadores {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 18px 0 16px;
+}
+
+.contador {
+    background: var(--blanco);
+    border: 2px solid var(--dorado);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(11, 42, 91, 0.12);
+}
+
+.numero {
+    display: block;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.etiqueta {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Colores de cada contador */
+.contador.aprobados .numero { color: #2e7d32; }
+.contador.aprobados { border-color: #8fcd93; background: #f2fbf3; }
+.contador.participaciones .numero { color: #1565c0; }
+.contador.participaciones { border-color: #90caf9; background: #f2f8fe; }
+.contador.sin-cer .numero { color: #c62828; }
+.contador.sin-cer { border-color: #ef9a9a; background: #fdf2f2; }
+
+/* FILTRO por programa */
+.filtro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    background: var(--blanco);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--azul-marino);
+}
+
+.filtro label {
+    font-weight: 700;
+    color: var(--azul-marino);
+}
+
+.filtro select {
+    flex: 1;
+    padding: 9px 12px;
+    border: 2px solid var(--dorado);
+    border-radius: 9px;
+    font-size: 0.95rem;
+    background: var(--blanco);
+    cursor: pointer;
+}
+
+.filtro button {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 9px;
+    background: var(--azul-marino);
+    color: var(--dorado-claro);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.filtro button:hover {
+    background: var(--azul-marino-claro);
+}
+
+/* TABLA DE RESULTADOS */
+.tabla-contenedor {
+    background: var(--blanco);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(11, 42, 91, 0.14);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: var(--azul-marino);
+    color: var(--dorado-claro);
+    text-align: left;
+    padding: 12px 12px;
+    font-size: 0.85rem;
+    letter-spacing: 0.4px;
+}
+
+td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #e6ecf5;
+    font-size: 0.92rem;
+}
+
+tbody tr:nth-child(even) {
+    background: #f6f9fd;
+}
+
+tbody tr:hover {
+    background: #eef4fa;
+}
+
+.sin-resultados {
+    text-align: center;
+    padding: 24px;
+    opacity: 0.6;
+}
+
+/* Tipo de certificado: color por estado */
+.cert-tipo {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* verde = Aprobacion */
+.cert-tipo.aprobado {
+    background: #e2f7e6;
+    color: #2e7d32;
+    border: 1px solid #8fcd93;
+}
+
+/* azul = Participacion */
+.cert-tipo.participacion {
+    background: #e3f0fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+/* rojo = Sin certificado */
+.cert-tipo.sin-certificado {
+    background: #fdeaea;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+/* Boton "ver certificado" */
+.boton-ver {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 9px;
+    background: var(--azul-marino);
+    color: var(--dorado-claro);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.83rem;
+}
+
+.boton-ver:hover {
+    background: var(--azul-marino-claro);
+    color: var(--blanco);
+}
+
+/* ---------- INCONSISTENCIAS (seccion aparte) ---------- */
+.inconsistencias {
+    margin-top: 26px;
+    background: var(--blanco);
+    border: 2px solid var(--dorado);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 14px rgba(11, 42, 91, 0.12);
+}
+
+.inconsistencias h2 {
+    color: var(--azul-marino);
+    letter-spacing: 0.5px;
+}
+
+.aviso-inconsistencia {
+    margin: 8px 0 14px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.bloque-inconsistencia {
+    border: 1px solid #e3d9b8;
+    border-left: 5px solid var(--dorado);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background: #fffdf3;
+}
+
+.bloque-inconsistencia h3 {
+    color: #8a6d00;
+    font-size: 0.98rem;
+}
+
+.explicacion {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin: 4px 0 6px;
+}
+
+.bloque-inconsistencia ul {
+    margin-left: 18px;
+}
+
+.bloque-inconsistencia li {
+    font-size: 0.88rem;
+    margin: 2px 0;
+}
+
+/* ---------- Pagina del certificado ---------- */
+.pagina-certificado {
+    background: linear-gradient(160deg, var(--dorado-claro) 0%, var(--fondo) 380px);
+}
+
+.certificado-contenedor {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+}
+
+.certificado {
+    background: var(--blanco);
+    width: min(860px, 100%);
+    border-radius: 18px;
+    padding: 34px 38px;
+    box-shadow: 0 8px 26px rgba(11, 42, 91, 0.18);
+    border: 6px solid var(--dorado);
+}
+
+.certificado .certificado-encabezado h1 {
+    font-size: 1.9rem;
+}
+
+.titulo-certificado {
+    text-align: center;
+    margin: 22px 0 12px;
+    color: var(--texto);
+}
+
+.texto-certificado {
+    text-align: center;
+    line-height: 1.7;
+    font-size: 1.02rem;
+    padding: 0 20px;
+}
+
+.texto-certificado strong {
+    color: var(--azul-marino);
+}
+
+/* Cuadro de rendimiento */
+.datos-rendimiento {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 24px 0;
+}
+
+.dato {
+    background: #f4f8ff;
+    border: 2px solid var(--azul-marino);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+}
+
+.dato-valor {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--azul-marino);
+}
+
+.dato-nombre {
+    font-size: 0.78rem;
+    opacity: 0.75;
+}
+
+/* Tabla de modulos */
+.titulo-modulos {
+    margin: 8px 0 10px;
+    font-size: 1rem;
+}
+
+.tabla-modulos th {
+    background: var(--azul-marino);
+    color: var(--dorado-claro);
+}
+
+/* Acciones */
+.acciones {
+    text-align: center;
+    margin-top: 24px;
+}
+
+/* ---------- Pie de pagina ---------- */
+footer {
+    text-align: center;
+    padding: 16px;
+    background: var(--azul-marino);
+    color: var(--dorado-claro);
+    font-size: 0.82rem;
+}
+
+/* ---------- Adaptacion a pantallas pequenas ---------- */
+@media (max-width: 720px) {
+    .contadores, .datos-rendimiento {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .certificado {
+        padding: 20px 14px;
+    }
+    .texto-certificado {
+        padding: 0 4px;
+    }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academia Horizonte - Certificados</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Encabezado (azul marino y dorado) -->
+    <header>
+        <h1>Academia Horizonte</h1>
+        <p class="subtitulo">Emision de certificados por programa</p>
+    </header>
+
+    <main>
+        <!-- CONTADORES: resumen general (los calcula la cocina) -->
+        <section class="contadores">
+            <div class="contador aprobados">
+                <span class="numero">{{ aprobados }}</span>
+                <span class="etiqueta">Certificados de Aprobacion</span>
+            </div>
+            <div class="contador participaciones">
+                <span class="numero">{{ participacion }}</span>
+                <span class="etiqueta">Certificados de Participacion</span>
+            </div>
+            <div class="contador sin-cer">
+                <span class="numero">{{ sin_certificado }}</span>
+                <span class="etiqueta">Sin certificado</span>
+            </div>
+        </section>
+
+        <!-- FILTRO por programa: envia a Flask con ?programa= -->
+        <form class="filtro" method="get" action="/">
+            <label for="programa">Programa:</label>
+            <select name="programa" id="programa" onchange="this.form.submit()">
+                <option value="">Todos los programas</option>
+                <!-- BUCLE: una opcion por programa del maestro -->
+                {% for p in programas %}
+                <option value="{{ p }}" {% if p == programa_filtro %}selected{% endif %}>
+                    {{ p }}
+                </option>
+                {% endfor %}
+            </select>
+            <noscript><button type="submit">Filtrar</button></noscript>
+        </form>
+
+        <!-- TABLA DE RESULTADOS -->
+        <section class="tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Programa</th>
+                        <th>Modulos</th>
+                        <th>Promedio</th>
+                        <th>Asistencia</th>
+                        <th>Certificado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- BUCLE: una fila por resultado -->
+                    {% for r in resultados %}
+                    <tr>
+                        <td>{{ r.nombre }}</td>
+                        <td>{{ r.programa }}</td>
+                        <td>{{ r.modulos_cursados }}</td>
+                        <td>{{ r.promedio }}</td>
+                        <td>{{ r.asistencia }}%</td>
+                        <!-- Color por tipo: verde / azul / rojo -->
+                        <td>
+                            <span class="cert-tipo {{ r.estado|lower|replace(' ', '-') }}">
+                                {{ r.etiqueta }}
+                            </span>
+                        </td>
+                        <td>
+                            <a class="boton-ver" href="/certificado/{{ r.identificacion }}">Ver certificado</a>
+                        </td>
+                    </tr>
+                    <!-- CONDICIONAL: si el filtro no deja resultados -->
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="sin-resultados">No hay estudiantes para ver.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECCION APARTE: INCONSISTENCIAS de los datos -->
+        <section class="inconsistencias">
+            <h2>Inconsistencias detectadas ({{ inconsistencias|length }})</h2>
+            <p class="aviso-inconsistencia">
+                Problemas en el cruce de los archivos de la bodega. No bloquean
+                la emision de certificados, pero conviene corregirlos.
+            </p>
+
+            <!-- BUCLE: una tarjeta por tipo de inconsistencia -->
+            {% for inc in inconsistencias %}
+            <div class="bloque-inconsistencia">
+                <h3>{{ inc.titulo }}</h3>
+                <p class="explicacion">{{ inc.explicacion }}</p>
+                <!-- BUCLE: cada item dentro de la inconsistencia -->
+                <ul>
+                    {% for item in inc.detalle %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </section>
+    </main>
+
+    <footer>
+        <p>Academia Horizonte - Certificados generados automaticamente a partir de los Excel</p>
+    </footer>
+</body>
+</html>

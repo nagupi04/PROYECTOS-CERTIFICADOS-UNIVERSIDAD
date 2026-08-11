@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado - {{ resumen.nombre }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="pagina-certificado">
+
+    <main class="certificado-contenedor">
+        <!-- Marco del certificado -->
+        <div class="certificado
+             {% if resumen.estado == 'Aprobado' %}marco-aprobado
+             {% elif resumen.estado == 'Participacion' %}marco-participacion
+             {% else %}marco-sin-certificado{% endif %}">
+
+            <header class="certificado-encabezado">
+                <h1>Academia Horizonte</h1>
+                <p class="subtitulo">Centro de formacion tecnica</p>
+            </header>
+
+            <!-- CONDICIONALES: texto diferente segun el estado -->
+            {% if resumen.estado == 'Aprobado' %}
+                <h2 class="titulo-certificado">Certificado de Aprobacion</h2>
+                <p class="texto-certificado">
+                    Se certifica que <strong>{{ resumen.nombre }}</strong>,
+                    portador de la identificacion <strong>{{ resumen.identificacion }}</strong>,
+                    aprobo satisfactoriamente el programa
+                    <strong>{{ resumen.programa }}</strong>
+                    (cohorte {{ resumen.cohorte }}).
+                </p>
+            {% elif resumen.estado == 'Participacion' %}
+                <h2 class="titulo-certificado">Certificado de Participacion</h2>
+                <p class="texto-certificado">
+                    Se certifica que <strong>{{ resumen.nombre }}</strong>,
+                    portador de la identificacion <strong>{{ resumen.identificacion }}</strong>,
+                    participo en el programa
+                    <strong>{{ resumen.programa }}</strong>
+                    (cohorte {{ resumen.cohorte }}).
+                </p>
+            {% else %}
+                <h2 class="titulo-certificado">Sin certificado</h2>
+                <p class="texto-certificado">
+                    <strong>{{ resumen.nombre }}</strong> no cumple con los requisitos
+                    para recibir certificado del programa
+                    <strong>{{ resumen.programa }}</strong>
+                    (cohorte {{ resumen.cohorte }}).
+                </p>
+            {% endif %}
+
+            <!-- Datos de rendimiento (los calcula la cocina) -->
+            <div class="datos-rendimiento">
+                <div class="dato">
+                    <span class="dato-valor">{{ resumen.modulos_cursados }}</span>
+                    <span class="dato-nombre">Modulos cursados</span>
+                </div>
+                <div class="dato">
+                    <span class="dato-valor">{{ resumen.promedio }}</span>
+                    <span class="dato-nombre">Promedio</span>
+                </div>
+                <div class="dato">
+                    <span class="dato-valor">{{ resumen.asistencia }}%</span>
+                    <span class="dato-nombre">Asistencia</span>
+                </div>
+                <div class="dato">
+                    <span class="dato-valor">{{ resumen.etiqueta }}</span>
+                    <span class="dato-nombre">Estado</span>
+                </div>
+            </div>
+
+            <!-- Tabla de modulos con sus notas individuales -->
+            <h3 class="titulo-modulos">Detalle por modulo</h3>
+            <table class="tabla-modulos">
+                <thead>
+                    <tr>
+                        <th>Modulo</th>
+                        <th>Nota</th>
+                        <th>Asistencia</th>
+                        <th>Fecha de cierre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- CONDICIONAL: si no curso modulos, mensaje aparte -->
+                    {% if modulos|length == 0 %}
+                    <tr>
+                        <td colspan="4" class="sin-resultados">
+                            Este estudiante no tiene modulos registrados.
+                        </td>
+                    </tr>
+                    <!-- BUCLE: una fila por modulo cursado -->
+                    {% else %}
+                    {% for m in modulos %}
+                    <tr>
+                        <td>{{ m.modulo }}</td>
+                        <td>{{ m.nota }}</td>
+                        <td>{{ m.asistencia }}%</td>
+                        <td>{{ m.fecha_cierre }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <!-- Boton para volver -->
+            <div class="acciones">
+                <a class="boton-ver" href="/">Volver a la lista</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Academia Horizonte - Certificado generado automaticamente</p>
+    </footer>
+</body>
+</html>
