@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <!-- Encabezado (azul marino y dorado) -->
+    <!-- Encabezado (lila y baby yellow) -->
     <header>
         <h1>Academia Horizonte</h1>
         <p class="subtitulo">Emision de certificados por programa</p>
@@ -68,7 +68,7 @@
                         <td>{{ r.modulos_cursados }}</td>
                         <td>{{ r.promedio }}</td>
                         <td>{{ r.asistencia }}%</td>
-                        <!-- Color por tipo: verde / azul / rojo -->
+                        <!-- Color por tipo: baby blue / lila / rosa palido -->
                         <td>
                             <span class="cert-tipo {{ r.estado|lower|replace(' ', '-') }}">
                                 {{ r.etiqueta }}
