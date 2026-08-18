@@ -18,6 +18,10 @@
             <header class="certificado-encabezado">
                 <h1>Academia Horizonte</h1>
                 <p class="subtitulo">Centro de formacion tecnica</p>
+                <div class="barra-sesion">
+                    <span>{{ usuario.correo }}</span>
+                    <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+                </div>
             </header>
 
             <!-- CONDICIONALES: texto diferente segun el estado -->

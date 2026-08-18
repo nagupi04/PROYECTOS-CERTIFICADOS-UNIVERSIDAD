@@ -11,6 +11,10 @@
     <header>
         <h1>Academia Horizonte</h1>
         <p class="subtitulo">Emision de certificados por programa</p>
+        <div class="barra-sesion">
+            <span>{{ usuario.correo }}</span>
+            <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+        </div>
     </header>
 
     <main>
@@ -88,7 +92,8 @@
             </table>
         </section>
 
-        <!-- SECCION APARTE: INCONSISTENCIAS de los datos -->
+        <!-- SECCION APARTE: INCONSISTENCIAS de los datos (solo admin) -->
+        {% if usuario.rol == 'admin' %}
         <section class="inconsistencias">
             <h2>Inconsistencias detectadas ({{ inconsistencias|length }})</h2>
             <p class="aviso-inconsistencia">
@@ -110,6 +115,7 @@
             </div>
             {% endfor %}
         </section>
+        {% endif %}
     </main>
 
     <footer>

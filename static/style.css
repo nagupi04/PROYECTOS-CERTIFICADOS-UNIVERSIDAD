@@ -53,6 +53,25 @@ h1 {
     margin-top: 4px;
 }
 
+.barra-sesion {
+    margin-top: 10px;
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    color: var(--baby-yellow-claro);
+}
+
+.barra-sesion a {
+    color: var(--baby-yellow-claro);
+    text-decoration: underline;
+    font-weight: 700;
+}
+
 /* ---------- Contenido principal ---------- */
 main {
     flex: 1;
@@ -363,6 +382,103 @@ tbody tr:hover {
 .acciones {
     text-align: center;
     margin-top: 24px;
+}
+
+/* ---------- Pantalla de login ---------- */
+.pagina-login {
+    background: linear-gradient(160deg, var(--baby-yellow-claro) 0%, var(--fondo) 380px);
+}
+
+.login-contenedor {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.login-tarjeta {
+    width: min(430px, 100%);
+    background: var(--blanco);
+    border-radius: 16px;
+    border: 2px solid var(--baby-yellow);
+    box-shadow: 0 8px 26px rgba(110, 90, 170, 0.18);
+    padding: 28px 24px;
+}
+
+.login-tarjeta h1 {
+    color: var(--lila);
+    text-shadow: none;
+    text-align: center;
+    font-size: 1.9rem;
+    letter-spacing: 1px;
+}
+
+.subtitulo-login {
+    text-align: center;
+    margin-top: 6px;
+    margin-bottom: 18px;
+    color: var(--texto);
+    opacity: 0.8;
+}
+
+.login-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-formulario label {
+    font-weight: 700;
+    color: var(--lila);
+}
+
+.login-formulario input {
+    padding: 10px 12px;
+    border: 2px solid #E3D8F4;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.login-formulario input:focus {
+    outline: none;
+    border-color: var(--lila);
+    box-shadow: 0 0 0 3px rgba(179, 157, 219, 0.2);
+}
+
+.login-formulario button {
+    margin-top: 4px;
+    border: none;
+    border-radius: 10px;
+    background: var(--lila);
+    color: var(--baby-yellow-claro);
+    font-weight: 700;
+    padding: 11px 14px;
+    cursor: pointer;
+}
+
+.login-formulario button:hover {
+    background: var(--lila-claro);
+}
+
+.mensaje {
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.mensaje.error {
+    background: #FCEFF2;
+    border: 1px solid #F0BAC8;
+    color: #9E4361;
+}
+
+.mensaje.ok {
+    background: #EAF6FE;
+    border: 1px solid #AFD4EF;
+    color: #2F6B99;
 }
 
 /* ---------- Pie de pagina ---------- */

@@ -8,9 +8,22 @@
 # ---------- IMPORTACIONES ----------
 # Flask: crea el servidor web. openpyxl: lee los archivos Excel.
 # pathlib: rutas que funcionan desde cualquier carpeta (produccion).
-from flask import Flask, render_template, request, abort
+from flask import (
+    Flask,
+    render_template,
+    request,
+    abort,
+    redirect,
+    url_for,
+    session,
+    flash,
+)
 from openpyxl import load_workbook
 from pathlib import Path
+from functools import wraps
+from werkzeug.security import check_password_hash, generate_password_hash
+import os
+import re
 
 # ---------- VARIABLES GLOBALES (ladrillos: datos fijos) ----------
 # BASE_DIR: carpeta donde vive este archivo, sin importar desde donde
@@ -43,6 +56,53 @@ ETIQUETAS = {
 
 # Creamos la aplicacion Flask
 app = Flask(__name__)
+
+# Clave de sesion (debe venir del entorno en produccion)
+app.config["SECRET_KEY"] = os.getenv(
+    "SECRET_KEY", "cambiar-esta-clave-en-produccion"
+)
+
+# Expresiones regulares para validar el formulario de acceso
+REGEX_CORREO = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+REGEX_CONTRASENA = re.compile(r"^[A-Za-z0-9]{8,}$")
+
+
+def cargar_usuarios_desde_entorno():
+    """Carga usuarios permitidos desde variables de entorno.
+
+    Variables esperadas:
+      - ADMIN_EMAIL y ADMIN_PASSWORD_HASH (o ADMIN_PASSWORD)
+      - USER_EMAIL y USER_PASSWORD_HASH (o USER_PASSWORD)
+    """
+    usuarios = {}
+
+    def agregar_usuario(prefijo, rol):
+        correo = os.getenv(prefijo + "_EMAIL", "").strip().lower()
+        password_hash = os.getenv(prefijo + "_PASSWORD_HASH", "").strip()
+        password_plano = os.getenv(prefijo + "_PASSWORD", "").strip()
+
+        if not correo:
+            return
+
+        if not password_hash and password_plano:
+            password_hash = generate_password_hash(password_plano)
+
+        if not password_hash:
+            return
+
+        usuarios[correo] = {
+            "rol": rol,
+            "password_hash": password_hash,
+        }
+
+    agregar_usuario("ADMIN", "admin")
+    agregar_usuario("USER", "normal")
+
+    return usuarios
+
+
+# Usuarios de acceso cargados al iniciar la app
+USUARIOS = cargar_usuarios_desde_entorno()
 
 
 # ---------- FUNCIONES DE LA COCINA (ladrillos: funciones) ----------
@@ -299,15 +359,131 @@ def listar_programas(estudiantes):
     return sorted(programas)
 
 
+def validar_formato_login(correo, contrasena):
+    """Valida formato basico de correo y contrasena alfanumerica."""
+    if not REGEX_CORREO.fullmatch(correo):
+        return False, "Ingresa un correo valido."
+
+    if not REGEX_CONTRASENA.fullmatch(contrasena):
+        return (
+            False,
+            "La contrasena debe ser alfanumerica y tener al menos 8 caracteres.",
+        )
+
+    return True, ""
+
+
+def autenticar_usuario(correo, contrasena):
+    """Verifica credenciales contra los usuarios definidos en entorno."""
+    usuario = USUARIOS.get(correo.lower())
+    if usuario is None:
+        return None
+
+    if not check_password_hash(usuario["password_hash"], contrasena):
+        return None
+
+    return {
+        "correo": correo.lower(),
+        "rol": usuario["rol"],
+    }
+
+
+def obtener_identificacion_por_correo(estudiantes, correo):
+    """Busca la identificacion del maestro asociada a un correo."""
+    correo_normalizado = correo.strip().lower()
+    for identificacion, estudiante in estudiantes.items():
+        correo_estudiante = str(estudiante.get("correo", "")).strip().lower()
+        if correo_estudiante == correo_normalizado:
+            return identificacion
+    return None
+
+
+def requiere_login(funcion):
+    """Decorador: exige sesion activa antes de ver cualquier pagina."""
+    @wraps(funcion)
+    def envoltura(*args, **kwargs):
+        if "usuario" not in session:
+            destino = request.path
+            return redirect(url_for("login", next=destino))
+        return funcion(*args, **kwargs)
+
+    return envoltura
+
+
 # ---------- RUTAS DEL SERVIDOR (lo que ve el usuario) ----------
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Pantalla de entrada por correo y contrasena."""
+    if "usuario" in session:
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        correo = request.form.get("correo", "").strip().lower()
+        contrasena = request.form.get("contrasena", "").strip()
+
+        es_valido, mensaje = validar_formato_login(correo, contrasena)
+        if not es_valido:
+            flash(mensaje, "error")
+        elif not USUARIOS:
+            flash(
+                "No hay usuarios configurados en entorno. Define ADMIN_EMAIL "
+                "+ ADMIN_PASSWORD_HASH (o ADMIN_PASSWORD) y/o USER_EMAIL + "
+                "USER_PASSWORD_HASH (o USER_PASSWORD).",
+                "error",
+            )
+        else:
+            usuario = autenticar_usuario(correo, contrasena)
+            if usuario is None:
+                flash("Correo o contrasena incorrectos.", "error")
+            else:
+                if usuario["rol"] == "normal":
+                    estudiantes = cargar_maestro()
+                    identificacion = obtener_identificacion_por_correo(
+                        estudiantes, correo
+                    )
+                    if identificacion is None:
+                        flash(
+                            "Este correo no esta asociado a un estudiante del "
+                            "maestro.",
+                            "error",
+                        )
+                        return render_template("login.html")
+
+                    usuario["identificacion"] = identificacion
+
+                session["usuario"] = usuario
+                destino = request.args.get("next", "")
+                if not destino.startswith("/"):
+                    destino = url_for("index")
+                return redirect(destino)
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    """Cierra la sesion del usuario actual."""
+    session.clear()
+    flash("Sesion cerrada correctamente.", "ok")
+    return redirect(url_for("login"))
+
 @app.route("/")
+@requiere_login
 def index():
     """Pagina principal: contadores, filtro, tabla e inconsistencias."""
     estudiantes = cargar_maestro()
     evaluaciones = cargar_evaluaciones()
     resultados = calcular_resultados(estudiantes, evaluaciones)
     inconsistencias = detectar_inconsistencias(estudiantes, evaluaciones)
+    usuario = session.get("usuario")
+
+    if usuario and usuario.get("rol") == "normal":
+        resultados = [
+            r for r in resultados
+            if str(r.get("correo", "")).strip().lower() == usuario["correo"]
+        ]
+        inconsistencias = []
 
     # CONTADORES GLOBALES (se calculan con TODOS, antes del filtro)
     total = len(resultados)
@@ -326,7 +502,10 @@ def index():
                       if r["programa"] == programa_filtro]
 
     # Lista de programas para el desplegable (los del maestro)
-    programas = listar_programas(estudiantes)
+    if usuario and usuario.get("rol") == "normal":
+        programas = sorted({r["programa"] for r in resultados})
+    else:
+        programas = listar_programas(estudiantes)
 
     return render_template(
         "index.html",
@@ -338,15 +517,23 @@ def index():
         aprobados=aprobados,
         participacion=participacion,
         sin_certificado=sin_certificado,
+        usuario=usuario,
     )
 
 
 @app.route("/certificado/<identificacion>")
+@requiere_login
 def certificado(identificacion):
     """Pagina de certificado individual de un estudiante."""
     estudiantes = cargar_maestro()
     evaluaciones = cargar_evaluaciones()
     resultados = calcular_resultados(estudiantes, evaluaciones)
+    usuario = session.get("usuario")
+
+    if usuario and usuario.get("rol") == "normal":
+        identificacion_autorizada = usuario.get("identificacion")
+        if identificacion != identificacion_autorizada:
+            abort(403, "No tienes permiso para ver este certificado")
 
     # BUCLE: buscamos el estudiante que coincida con la URL
     resumen = None
@@ -367,6 +554,7 @@ def certificado(identificacion):
         "certificado.html",
         resumen=resumen,
         modulos=modulos,
+        usuario=usuario,
     )
 
 
