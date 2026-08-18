@@ -14,6 +14,9 @@
         <div class="barra-sesion">
             <span>{{ usuario.correo }}</span>
             <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+            {% if usuario and usuario.rol == 'admin' %}
+            <a class="admin-link" href="{{ url_for('admin_users') }}">Panel de usuarios</a>
+            {% endif %}
         </div>
     </header>
 

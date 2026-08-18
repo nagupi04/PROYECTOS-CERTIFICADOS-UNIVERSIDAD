@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de usuarios - Academia Horizonte</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Pequeños estilos para el panel */
+        .panel { max-width: 900px; margin: 24px auto; padding: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+        form.inline { display: inline; }
+        .acciones { display: flex; gap: 8px; }
+        .crear { margin: 16px 0; padding: 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Panel de usuarios</h1>
+        <div class="barra-sesion">
+            <span>{{ usuario.correo }}</span>
+            <a href="{{ url_for('logout') }}">Cerrar sesion</a>
+            <a href="{{ url_for('index') }}">Volver</a>
+        </div>
+    </header>
+
+    <main class="panel">
+        <section>
+            <h2>Usuarios configurados</h2>
+            <table>
+                <thead>
+                    <tr><th>Correo</th><th>Rol</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td>{{ u.correo }}</td>
+                        <td>{{ u.rol }}</td>
+                        <td class="acciones">
+                            <!-- Formulario para editar rol/clave -->
+                            <form class="inline" method="post" action="{{ url_for('admin_users_edit', correo=u.correo) }}">
+                                <select name="rol">
+                                    <option value="normal" {% if u.rol=='normal' %}selected{% endif %}>normal</option>
+                                    <option value="admin" {% if u.rol=='admin' %}selected{% endif %}>admin</option>
+                                </select>
+                                <input name="password" placeholder="Nueva contrasena (opcional)" />
+                                <button type="submit">Actualizar</button>
+                            </form>
+
+                            <!-- Formulario para eliminar -->
+                            <form class="inline" method="post" action="{{ url_for('admin_users_delete', correo=u.correo) }}" onsubmit="return confirm('Eliminar usuario?');">
+                                <button type="submit">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="crear">
+            <h2>Crear nuevo usuario</h2>
+            <form method="post" action="{{ url_for('admin_users_create') }}">
+                <label>Correo: <input name="correo" required /></label>
+                <label>Rol:
+                    <select name="rol">
+                        <option value="normal">normal</option>
+                        <option value="admin">admin</option>
+                    </select>
+                </label>
+                <label>Contrasena: <input name="password" required /></label>
+                <button type="submit">Crear usuario</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>Administración básica de usuarios (desarrollo)</p>
+    </footer>
+</body>
+</html>

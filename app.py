@@ -104,6 +104,57 @@ def cargar_usuarios_desde_entorno():
 # Usuarios de acceso cargados al iniciar la app
 USUARIOS = cargar_usuarios_desde_entorno()
 
+# Fichero local para persistir usuarios creados desde la app (desarrollo)
+USUARIOS_FILE = BASE_DIR / "USUARIOS.json"
+
+import json
+
+
+def _normalizar_correo(correo: str) -> str:
+    return correo.strip().lower()
+
+
+def cargar_usuarios_desde_archivo():
+    """Carga usuarios desde USUARIOS.json si existe. Merge con USUARIOS."""
+    if not USUARIOS_FILE.exists():
+        return {}
+    try:
+        with open(USUARIOS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            # Normalizar llaves
+            return { _normalizar_correo(k): v for k, v in data.items() }
+    except Exception:
+        return {}
+
+
+def guardar_usuarios_en_archivo(usuarios):
+    """Guarda el diccionario de usuarios (hashes) en USUARIOS.json."""
+    try:
+        serializable = { k: v for k, v in usuarios.items() }
+        with open(USUARIOS_FILE, "w", encoding="utf-8") as f:
+            json.dump(serializable, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+# Merge: primero los de entorno, luego los del archivo (archivo puede añadir/editar)
+usuarios_archivo = cargar_usuarios_desde_archivo()
+for correo, datos in usuarios_archivo.items():
+    if correo not in {k.lower() for k in USUARIOS}:
+        USUARIOS[correo] = datos
+
+# --- Usuario administrador por defecto ---
+# Si no se configuraron usuarios vía variables de entorno ni en archivo,
+# añadimos el administrador pedido por el usuario (solo para desarrollo).
+DEFAULT_ADMIN_EMAIL = "nagupi04@hotmail.com"
+DEFAULT_ADMIN_PASSWORD = "arbolmateo26"
+if _normalizar_correo(DEFAULT_ADMIN_EMAIL) not in {k.lower() for k in USUARIOS}:
+    USUARIOS[_normalizar_correo(DEFAULT_ADMIN_EMAIL)] = {
+        "rol": "admin",
+        "password_hash": generate_password_hash(DEFAULT_ADMIN_PASSWORD),
+    }
+
 
 # ---------- FUNCIONES DE LA COCINA (ladrillos: funciones) ----------
 
@@ -411,6 +462,106 @@ def requiere_login(funcion):
 
 
 # ---------- RUTAS DEL SERVIDOR (lo que ve el usuario) ----------
+
+
+def requiere_admin(funcion):
+    """Decorador: exige sesion activa y rol admin."""
+    @wraps(funcion)
+    def envoltura(*args, **kwargs):
+        if "usuario" not in session:
+            destino = request.path
+            return redirect(url_for("login", next=destino))
+        usuario = session.get("usuario")
+        if not usuario or usuario.get("rol") != "admin":
+            abort(403, "Acceso restringido: solo administradores")
+        return funcion(*args, **kwargs)
+
+    return envoltura
+
+
+# ---------- RUTAS DE ADMIN: gestion de usuarios ----------
+
+
+@app.route("/admin/users")
+@requiere_admin
+def admin_users():
+    """Lista los usuarios configurados (solo admin)."""
+    usuarios_list = [
+        {"correo": correo, "rol": datos.get("rol", "normal")}
+        for correo, datos in sorted(USUARIOS.items())
+    ]
+    return render_template("admin_users.html", usuarios=usuarios_list,
+                           usuario=session.get("usuario"))
+
+
+@app.route("/admin/users/create", methods=["POST"])
+@requiere_admin
+def admin_users_create():
+    """Crea un usuario nuevo (rol + password)."""
+    correo = _normalizar_correo(request.form.get("correo", ""))
+    rol = request.form.get("rol", "normal")
+    password = request.form.get("password", "")
+
+    # Validaciones basicas
+    if not correo or not REGEX_CORREO.fullmatch(correo):
+        flash("Correo invalido.", "error")
+        return redirect(url_for("admin_users"))
+
+    if correo in USUARIOS:
+        flash("Ya existe un usuario con ese correo.", "error")
+        return redirect(url_for("admin_users"))
+
+    if not password or not REGEX_CONTRASENA.fullmatch(password):
+        flash("La contrasena debe ser alfanumerica y tener al menos 8 caracteres.", "error")
+        return redirect(url_for("admin_users"))
+
+    USUARIOS[correo] = {
+        "rol": rol,
+        "password_hash": generate_password_hash(password),
+    }
+    guardar_usuarios_en_archivo(USUARIOS)
+    flash("Usuario creado correctamente.", "ok")
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/edit/<correo>", methods=["POST"])
+@requiere_admin
+def admin_users_edit(correo):
+    correo = _normalizar_correo(correo)
+    if correo not in USUARIOS:
+        abort(404, "Usuario no encontrado")
+
+    rol = request.form.get("rol", "normal")
+    password = request.form.get("password", "")
+
+    USUARIOS[correo]["rol"] = rol
+    if password:
+        if not REGEX_CONTRASENA.fullmatch(password):
+            flash("La contrasena debe ser alfanumerica y tener al menos 8 caracteres.", "error")
+            return redirect(url_for("admin_users"))
+        USUARIOS[correo]["password_hash"] = generate_password_hash(password)
+
+    guardar_usuarios_en_archivo(USUARIOS)
+    flash("Usuario actualizado.", "ok")
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/delete/<correo>", methods=["POST"])
+@requiere_admin
+def admin_users_delete(correo):
+    correo = _normalizar_correo(correo)
+    if correo in USUARIOS:
+        # No permitir borrar el ultimo admin
+        if USUARIOS[correo].get("rol") == "admin":
+            admins = [u for u in USUARIOS.values() if u.get("rol") == "admin"]
+            if len(admins) <= 1:
+                flash("No se puede eliminar al ultimo administrador.", "error")
+                return redirect(url_for("admin_users"))
+        del USUARIOS[correo]
+        guardar_usuarios_en_archivo(USUARIOS)
+        flash("Usuario eliminado.", "ok")
+    return redirect(url_for("admin_users"))
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
